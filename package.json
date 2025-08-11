@@ -1,0 +1,18 @@
+{
+  "name": "adyen-integration-monorepo",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "server",
+    "ui"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run -w server start:dev\" \"npm run -w ui dev -- --port 9807\"",
+    "dev:server": "npm run -w server start:dev",
+    "dev:ui": "npm run -w ui dev -- --port 9807"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3"
+  }
+}

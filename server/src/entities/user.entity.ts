@@ -13,8 +13,8 @@ export class User {
   @Column({ type: 'varchar', length: 255, name: 'password_hash' })
   passwordHash!: string;
 
-  @Column({ type: 'enum', enum: ['admin', 'accountant'], name: 'role' })
-  role!: 'admin' | 'accountant';
+  @Column({ type: 'enum', enum: ['admin', 'accountant', 'customer'], name: 'role' })
+  role!: 'admin' | 'accountant' | 'customer';
 
   @CreateDateColumn({
     type: 'datetime',

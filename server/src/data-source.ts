@@ -24,4 +24,3 @@ export const AppDataSource = new DataSource({
   timezone: 'Z',
 });
 
-export default AppDataSource;

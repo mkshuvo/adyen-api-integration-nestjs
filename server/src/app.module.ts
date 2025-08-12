@@ -7,6 +7,11 @@ import { User } from './entities/user.entity';
 import { UserBankAccount } from './entities/user_bank_account.entity';
 import { PayAccountingPayment } from './entities/pay_accounting_payment.entity';
 import { PayoutAudit } from './entities/payout_audit.entity';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
+import { PayoutsModule } from './payouts/payouts.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -26,6 +31,11 @@ import { PayoutAudit } from './entities/payout_audit.entity';
       }),
     }),
     TypeOrmModule.forFeature([User, UserBankAccount, PayAccountingPayment, PayoutAudit]),
+    AuthModule,
+    UsersModule,
+    BankAccountsModule,
+    PayoutsModule,
+    WebhooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

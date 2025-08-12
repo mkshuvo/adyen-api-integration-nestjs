@@ -11,10 +11,10 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
-
+server/dist*
 # OS
 .DS_Store
-
+.vscode/
 # Tests
 /coverage
 /.nyc_output

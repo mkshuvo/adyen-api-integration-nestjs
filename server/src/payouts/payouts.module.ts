@@ -5,12 +5,14 @@ import { PayoutAudit } from '../entities/payout_audit.entity';
 import { User } from '../entities/user.entity';
 import { UserBankAccount } from '../entities/user_bank_account.entity';
 import { PayoutsService } from './payouts.service';
+import { BalanceService } from './balance.service';
+import { AdyenService } from './adyen.service';
 import { PayoutsController } from './payouts.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PayAccountingPayment, PayoutAudit, User, UserBankAccount])],
   controllers: [PayoutsController],
-  providers: [PayoutsService],
-  exports: [PayoutsService],
+  providers: [PayoutsService, BalanceService, AdyenService],
+  exports: [PayoutsService, BalanceService, AdyenService],
 })
 export class PayoutsModule {}

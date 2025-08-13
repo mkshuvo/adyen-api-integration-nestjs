@@ -25,6 +25,17 @@ export class BankAccountsService {
       throw new BadRequestException('Provide either iban or account_number + routing_code');
     }
 
+    // Auto-validate prior to persisting
+    let ok = true;
+    if (hasIban) {
+      if (!isValidIban(dto.iban!)) {
+        ok = false;
+      }
+    } else {
+      if (!dto.account_number || dto.account_number.length < 6) ok = false;
+      if (!dto.routing_code || dto.routing_code.length < 3) ok = false;
+    }
+
     const existing = await this.baRepo.findOne({ where: { userId: user.id } });
     const bank: UserBankAccount =
       existing ??
@@ -36,7 +47,7 @@ export class BankAccountsService {
     bank.iban = dto.iban ?? null;
     bank.accountNumber = dto.account_number ?? null;
     bank.routingCode = dto.routing_code ?? null;
-    bank.status = 'unvalidated';
+    bank.status = ok ? 'valid' : 'invalid';
     bank.adyenRecurringDetailReference = null;
 
     return await this.baRepo.save(bank);

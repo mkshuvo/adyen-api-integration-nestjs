@@ -5,6 +5,8 @@ import { PayAccountingPayment } from '../entities/pay_accounting_payment.entity'
 import { PayoutAudit } from '../entities/payout_audit.entity';
 import { User } from '../entities/user.entity';
 import { UserBankAccount } from '../entities/user_bank_account.entity';
+import { BalanceService } from './balance.service';
+import { AdyenService } from './adyen.service';
 
 @Injectable()
 export class PayoutsService {
@@ -13,6 +15,8 @@ export class PayoutsService {
     @InjectRepository(PayoutAudit) private readonly auditRepo: Repository<PayoutAudit>,
     @InjectRepository(User) private readonly usersRepo: Repository<User>,
     @InjectRepository(UserBankAccount) private readonly bankRepo: Repository<UserBankAccount>,
+    private readonly balanceService: BalanceService,
+    private readonly adyenService: AdyenService,
   ) {}
 
   async submit(paymentId: string) {
@@ -28,6 +32,16 @@ export class PayoutsService {
     if (!bank) throw new BadRequestException('User has no bank account');
     if (bank.status !== 'valid') throw new BadRequestException('Bank account is not validated');
 
+    // Budget/Balance check (major units, e.g. 250.00)
+    const amt = payment.amount ? Number(payment.amount) : 0;
+    if (!Number.isFinite(amt) || amt <= 0) {
+      throw new BadRequestException('Invalid or missing payment amount');
+    }
+    const available = this.balanceService.getAvailableMajorUnits();
+    if (amt > available) {
+      throw new BadRequestException(`Insufficient available payout budget. Needed ${amt.toFixed(2)}, available ${Number.isFinite(available) ? available.toFixed(2) : 'unlimited'}`);
+    }
+
     // Idempotency: if an 'initiated' audit exists, return existing state
     const existing = await this.auditRepo.findOne({ where: { paymentId: payment.paymentId, status: 'initiated' } });
     if (existing) {
@@ -37,11 +51,20 @@ export class PayoutsService {
     const audit = this.auditRepo.create({
       paymentId: payment.paymentId,
       status: 'initiated',
-      message: 'Payout submitted (simulated)'
+      message: 'Payout submission started',
     });
     await this.auditRepo.save(audit);
 
-    // In a full implementation, enqueue a job to call Adyen and update audit with PSP reference
-    return { status: 'initiated', audit_id: audit.id } as const;
+    // Call Adyen (currently stubbed) and record result
+    const result = await this.adyenService.submitPayout(payment, user, bank);
+    const followUp = this.auditRepo.create({
+      paymentId: payment.paymentId,
+      status: result.status === 'submitted' ? 'submitted' : 'failed',
+      message: result.message ?? null,
+      adyenPspReference: result.pspReference ?? null,
+    });
+    await this.auditRepo.save(followUp);
+
+    return { status: 'initiated', audit_id: audit.id, submission_audit_id: followUp.id } as const;
   }
 }

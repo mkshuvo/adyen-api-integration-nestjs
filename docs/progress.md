@@ -112,3 +112,4 @@ Last updated: 2025-08-16
 - Add BullMQ + Redis for scalable payout queues and retries.
 - Frontend flows (registration, bank accounts, payouts, dashboard).
 - README and API collection for testing.
+

@@ -1,25 +1,43 @@
-version: '3.9'
+name: adyen-integration
+
 services:
   db:
-    image: mysql:8
+    image: mysql:8.0.43
+    command: [
+      "--default-authentication-plugin=mysql_native_password",
+      "--character-set-server=utf8mb4",
+      "--collation-server=utf8mb4_unicode_ci"
+    ]
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: rootpass
+      TZ: ${TZ:-UTC}
+      MYSQL_DATABASE: ${DB_NAME:-appdb}
+      MYSQL_USER: ${DB_USER:-app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-app}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
     ports:
       - "33117:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 10s
     volumes:
       - mysql_data:/var/lib/mysql
+    stop_grace_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - app_net
 
   server:
     build:
       context: ./server
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
@@ -29,17 +47,43 @@ services:
         condition: service_healthy
     ports:
       - "8054:8054"
-    command: sh -c "node dist/src/run-migrations.js || node dist/src/run-migrations.cjs || true && node dist/main.js"
+    command: >-
+      sh -c "node dist/src/run-migrations.js || node dist/src/run-migrations.cjs || true && node dist/main.js"
+    restart: unless-stopped
+    init: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - app_net
 
   ui:
     build:
       context: ./ui
+      dockerfile: Dockerfile
     env_file:
       - .env
     depends_on:
-      - server
+      server:
+        condition: service_started
     ports:
       - "9807:9807"
+    restart: unless-stopped
+    init: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - app_net
 
 volumes:
   mysql_data:
+    driver: local
+
+networks:
+  app_net:
+    driver: bridge

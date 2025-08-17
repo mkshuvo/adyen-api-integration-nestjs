@@ -12,6 +12,8 @@ import { UsersModule } from './users/users.module';
 import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
 import { PayoutsModule } from './payouts/payouts.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { PaymentsModule } from './payments/payments.module';
+import { SeederService } from './database/seeder.service';
 
 @Module({
   imports: [
@@ -24,8 +26,8 @@ import { WebhooksModule } from './webhooks/webhooks.module';
         username: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'test',
-        // Do NOT use synchronize in production. We will add migrations later per prompt.
-        synchronize: false,
+        // Enable synchronize for development - creates tables automatically
+        synchronize: true,
         entities: [User, UserBankAccount, PayAccountingPayment, PayoutAudit],
         timezone: 'Z',
       }),
@@ -36,8 +38,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     BankAccountsModule,
     PayoutsModule,
     WebhooksModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, SeederService],
 })
 export class AppModule {}

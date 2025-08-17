@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -10,6 +10,12 @@ import { ValidateBankAccountDto } from './dto/validate-bank-account.dto';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class BankAccountsController {
   constructor(private readonly service: BankAccountsService) {}
+
+  @Get()
+  @Roles('admin', 'accountant')
+  async findAll() {
+    return this.service.findAll();
+  }
 
   @Post()
   @Roles('admin', 'accountant')

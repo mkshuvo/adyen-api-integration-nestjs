@@ -1,98 +1,273 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Adyen Sandbox Payout Platform
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A full-stack TypeScript application for managing payouts to bank accounts using Adyen's sandbox environment. Built with NestJS backend, Next.js frontend, and MySQL database.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Architecture
 
-## Description
+- **Backend**: NestJS + TypeORM + MySQL
+- **Frontend**: Next.js 14 (App Router) + MUI v6
+- **Payment Processing**: Adyen Node.js SDK
+- **Authentication**: JWT with role-based access control
+- **Containerization**: Docker + Docker Compose
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Quick Start
 
-## Project setup
+### Prerequisites
+
+- Node.js 18+ and npm
+- Docker and Docker Compose
+- Adyen sandbox account (for real integration)
+
+### 1. Clone and Setup
 
 ```bash
-$ npm install
+git clone <repository-url>
+cd adyen-integration
+cp .env.example .env
 ```
 
-## Compile and run the project
+### 2. Configure Environment
+
+Edit `.env` with your settings:
+
+```env
+# Database
+DB_HOST=db
+DB_PORT=3306
+DB_USER=payout_user
+DB_PASSWORD=payout_pass
+DB_NAME=payout_db
+
+# Application Ports
+API_PORT=8054
+WEB_PORT=9807
+
+# JWT
+JWT_SECRET=your-secret-key
+
+# Adyen Configuration (Optional - will use stubs if not provided)
+ADYEN_API_KEY=your-adyen-api-key
+ADYEN_MERCHANT_ACCOUNT=your-merchant-account
+ADYEN_HMAC_KEY=your-hmac-key
+ADYEN_ENV=test
+```
+
+### 3. Run with Docker
 
 ```bash
-# development
-$ npm run start
+# Build and start all services
+docker-compose up --build
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Or run in background
+docker-compose up -d --build
 ```
 
-## Run tests
+### 4. Access the Application
+
+- **Frontend**: http://localhost:9807
+- **Backend API**: http://localhost:8054
+- **MySQL**: localhost:33117
+
+## 🛠️ Development Setup
+
+### Local Development (without Docker)
 
 ```bash
-# unit tests
-$ npm run test
+# Install dependencies
+npm install
 
-# e2e tests
-$ npm run test:e2e
+# Start MySQL (via Docker)
+docker-compose up db -d
 
-# test coverage
-$ npm run test:cov
+# Run both apps concurrently
+npm run dev
+
+# Or run separately
+npm run dev:server  # Backend only
+npm run dev:ui      # Frontend only
 ```
 
-## Deployment
+## 👤 Default Users
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The system comes with pre-seeded test accounts:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | admin@example.com | password123 |
+| Accountant | accountant@example.com | password123 |
+
+## 🔐 Authentication & Authorization
+
+- **JWT-based authentication** with persistent login
+- **Role-based access control** (RBAC):
+  - **Admin**: Full access to users, bank accounts, and payouts
+  - **Accountant**: Access to bank accounts and payouts
+  - **Customer**: Limited access (future implementation)
+
+## 💳 Features
+
+### Backend (NestJS)
+
+- ✅ **Authentication**: JWT login with bcrypt password hashing
+- ✅ **User Management**: CRUD operations with role-based access
+- ✅ **Bank Accounts**: IBAN/account validation and storage
+- ✅ **Payouts**: Adyen integration with audit trails
+- ✅ **Webhooks**: HMAC-verified Adyen notifications
+- ✅ **Budget Control**: Balance platform integration
+- ✅ **Database**: MySQL with TypeORM migrations
+
+### Frontend (Next.js + MUI)
+
+- ✅ **Authentication**: Login with JWT token management
+- ✅ **Dashboard**: Payout statistics and recent transactions
+- ✅ **Bank Accounts**: CRUD with IBAN/account number support
+- ✅ **Payouts**: Create and track with expandable audit trails
+- ✅ **Responsive Design**: Modern MUI components
+- ✅ **Role Guards**: UI elements shown based on user permissions
+
+## 🏦 Payout Flow
+
+1. **Bank Account Setup**: Add and validate user bank accounts
+2. **Payout Creation**: Submit payout with payment ID reference
+3. **Adyen Processing**: 
+   - Store bank details (tokenization)
+   - Submit third-party payout
+   - Confirm payout (if required)
+4. **Webhook Handling**: Receive and process Adyen notifications
+5. **Audit Trail**: Complete transaction history with status updates
+
+## 📊 Database Schema
+
+### Core Tables
+
+- `users`: Authentication and role management
+- `user_bank_account`: Bank account details with validation status
+- `pay_accounting_payment`: Payment records with amounts and tracking
+- `payout_audit`: Complete audit trail of payout operations
+
+## 🧪 Testing
+
+### API Testing
+
+Use the seeded accounts to test the complete flow:
+
+1. **Login** as admin or accountant
+2. **Add Bank Account** for a user with IBAN or account details
+3. **Validate Bank Account** to ensure it's ready for payouts
+4. **Create Payout** using an existing payment ID
+5. **Monitor Status** through the audit trail
+
+### Sample API Calls
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Login
+curl -X POST http://localhost:8054/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"password123"}'
+
+# Add Bank Account (with JWT token)
+curl -X POST http://localhost:8054/api/bank-accounts \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": 2,
+    "country": "NL",
+    "currency": "EUR",
+    "accountHolderName": "John Doe",
+    "iban": "NL91ABNA0417164300"
+  }'
+
+# Submit Payout
+curl -X POST http://localhost:8054/api/payouts/submit \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"payment_id": "1000000001"}'
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🔧 Configuration
 
-## Resources
+### Adyen Integration
 
-Check out a few resources that may come in handy when working with NestJS:
+The application supports both **sandbox mode** (with stubs) and **real Adyen integration**:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Sandbox Mode**: Works without Adyen credentials using simulated responses
+- **Live Integration**: Set `ADYEN_API_KEY`, `ADYEN_MERCHANT_ACCOUNT`, and `ADYEN_HMAC_KEY`
 
-## Support
+### Balance Platform
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Optional Adyen Balance Platform integration:
 
-## Stay in touch
+```env
+ADYEN_USE_BALANCE_PLATFORM=true
+ADYEN_BALANCE_ACCOUNT_ID=your-balance-account-id
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Fallback to budget limit:
 
-## License
+```env
+AVAILABLE_PAYOUT_BUDGET=10000.00
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 📁 Project Structure
+
+```
+├── server/                 # NestJS Backend
+│   ├── src/
+│   │   ├── auth/          # Authentication module
+│   │   ├── bank-accounts/ # Bank account management
+│   │   ├── payouts/       # Payout processing & Adyen
+│   │   ├── webhooks/      # Adyen webhook handling
+│   │   ├── entities/      # TypeORM entities
+│   │   └── migrations/    # Database migrations
+│   └── Dockerfile
+├── ui/                    # Next.js Frontend
+│   ├── app/              # App Router pages
+│   ├── components/       # Reusable components
+│   ├── lib/             # API client & auth store
+│   └── Dockerfile
+├── docker-compose.yml    # Multi-service orchestration
+└── .env.example         # Environment template
+```
+
+## 🚢 Deployment
+
+### Docker Production
+
+```bash
+# Production build
+docker-compose -f docker-compose.yml up --build -d
+
+# View logs
+docker-compose logs -f
+
+# Scale services
+docker-compose up --scale server=2 --scale ui=2
+```
+
+### Environment Variables
+
+Ensure all required environment variables are set for production:
+
+- Database credentials
+- JWT secret (strong, random value)
+- Adyen API credentials
+- Proper CORS settings
+
+## 🔍 Monitoring & Logs
+
+- **Application Logs**: Available via `docker-compose logs`
+- **Database**: MySQL accessible on port 33117
+- **Health Checks**: Built-in for database connectivity
+- **Audit Trail**: Complete payout operation history
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.

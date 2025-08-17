@@ -1,13 +1,13 @@
 # ui/Dockerfile
 FROM node:lts-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm ci || npm i
+COPY package.json ./
+RUN npm install
 
 FROM node:lts-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN npm ci || npm i
+RUN npm install
 RUN npm run build
 
 FROM node:lts-alpine AS runner

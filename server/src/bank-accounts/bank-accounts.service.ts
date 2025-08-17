@@ -14,6 +14,13 @@ export class BankAccountsService {
     @InjectRepository(UserBankAccount) private readonly baRepo: Repository<UserBankAccount>,
   ) {}
 
+  async findAll(): Promise<UserBankAccount[]> {
+    return this.baRepo.find({
+      relations: ['user'],
+      order: { createdAt: 'DESC' }
+    });
+  }
+
   async upsert(dto: UpsertBankAccountDto): Promise<UserBankAccount> {
     const user = await this.usersRepo.findOne({ where: { id: dto.user_id } });
     if (!user) throw new NotFoundException('User not found');

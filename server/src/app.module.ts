@@ -1,19 +1,15 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { User } from './entities/user.entity';
-import { UserBankAccount } from './entities/user_bank_account.entity';
-import { PayAccountingPayment } from './entities/pay_accounting_payment.entity';
-import { PayoutAudit } from './entities/payout_audit.entity';
+import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { BankAccountsModule } from './bank-accounts/bank-accounts.module';
-import { PayoutsModule } from './payouts/payouts.module';
-import { WebhooksModule } from './webhooks/webhooks.module';
 import { PaymentsModule } from './payments/payments.module';
-import { SeederService } from './database/seeder.service';
+import { AdyenModule } from './adyen/adyen.module';
+import { HealthModule } from './health/health.module';
+import { User } from './entities/user.entity';
+import { UserBankAccount } from './entities/user_bank_account.entity';
+import { PayAccountingPayment } from './entities/pay_accounting_payment.entity';
 
 @Module({
   imports: [
@@ -26,21 +22,17 @@ import { SeederService } from './database/seeder.service';
         username: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'test',
-        // Enable synchronize for development - creates tables automatically
         synchronize: true,
-        entities: [User, UserBankAccount, PayAccountingPayment, PayoutAudit],
+        entities: [User, UserBankAccount, PayAccountingPayment],
         timezone: 'Z',
       }),
     }),
-    TypeOrmModule.forFeature([User, UserBankAccount, PayAccountingPayment, PayoutAudit]),
     AuthModule,
     UsersModule,
     BankAccountsModule,
-    PayoutsModule,
-    WebhooksModule,
     PaymentsModule,
+    AdyenModule,
+    HealthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, SeederService],
 })
 export class AppModule {}

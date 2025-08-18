@@ -10,12 +10,6 @@ interface RoleGuardProps {
 export default function RoleGuard({ children, allowedRoles, fallback = null }: RoleGuardProps) {
   const user = useAuthStore((state) => state.user);
 
-  // Debug logging
-  console.log('RoleGuard - User:', user);
-  console.log('RoleGuard - Allowed roles:', allowedRoles);
-  console.log('RoleGuard - User role:', user?.role);
-  console.log('RoleGuard - Has access:', user && allowedRoles.includes(user.role));
-
   if (!user || !allowedRoles.includes(user.role)) {
     return <>{fallback}</>;
   }

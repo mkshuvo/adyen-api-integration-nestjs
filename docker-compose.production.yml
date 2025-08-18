@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0.43
+    container_name: adyen-integration-db-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data_prod:/var/lib/mysql
+      - ./server/src/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - app_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+      interval: 10s
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: adyen-integration-server-prod
+    environment:
+      - NODE_ENV=production
+      - API_PORT=${API_PORT}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADYEN_API_KEY=${ADYEN_API_KEY}
+      - ADYEN_MERCHANT_ACCOUNT=${ADYEN_MERCHANT_ACCOUNT}
+      - ADYEN_HMAC_KEY=${ADYEN_HMAC_KEY}
+      - ADYEN_ENV=${ADYEN_ENV}
+      - ADYEN_PAYOUT_ENDPOINT=${ADYEN_PAYOUT_ENDPOINT}
+      - ADYEN_USE_BALANCE_PLATFORM=${ADYEN_USE_BALANCE_PLATFORM}
+      - ADYEN_BALANCE_ACCOUNT_ID=${ADYEN_BALANCE_ACCOUNT_ID}
+      - AVAILABLE_PAYOUT_BUDGET=${AVAILABLE_PAYOUT_BUDGET}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX}
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FORMAT=${LOG_FORMAT}
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/health"]
+      timeout: 5s
+      retries: 5
+      interval: 30s
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:${API_PORT}
+    container_name: adyen-integration-ui-prod
+    environment:
+      - NODE_ENV=production
+      - PORT=${WEB_PORT}
+      - NEXT_PUBLIC_API_URL=http://localhost:${API_PORT}
+    ports:
+      - "${WEB_PORT}:${WEB_PORT}"
+    depends_on:
+      - server
+    networks:
+      - app_net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WEB_PORT}"]
+      timeout: 5s
+      retries: 5
+      interval: 30s
+
+volumes:
+  db_data_prod:
+    driver: local
+
+networks:
+  app_net:
+    driver: bridge

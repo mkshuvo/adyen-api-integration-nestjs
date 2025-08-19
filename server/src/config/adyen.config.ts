@@ -4,14 +4,14 @@ export const adyenConfig = {
   merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT || 'YOUR_MERCHANT_ACCOUNT_HERE',
   
   // Environment settings
-  environment: process.env.ADYEN_ENVIRONMENT || 'TEST', // TEST or LIVE
+  environment: (process.env.ADYEN_ENV || 'test').toUpperCase(), // TEST or LIVE
   
   // API URLs based on environment
-  baseUrl: process.env.ADYEN_ENVIRONMENT === 'LIVE' 
+  baseUrl: (process.env.ADYEN_ENV || 'test').toLowerCase() === 'live'
     ? 'https://checkout-live.adyen.com/v71'
     : 'https://checkout-test.adyen.com/v71',
     
-  payoutUrl: process.env.ADYEN_ENVIRONMENT === 'LIVE'
+  payoutUrl: (process.env.ADYEN_ENV || 'test').toLowerCase() === 'live'
     ? 'https://payout-live.adyen.com/v68'
     : 'https://payout-test.adyen.com/v68',
     

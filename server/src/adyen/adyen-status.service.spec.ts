@@ -14,7 +14,7 @@ describe('AdyenStatusService', () => {
 
   beforeEach(() => {
     configValues = {
-      ADYEN_ENVIRONMENT: 'test',
+      ADYEN_ENV: 'test',
       ADYEN_API_KEY: '',
       ADYEN_BALANCE_ACCOUNT_ID: '',
     };
@@ -27,14 +27,14 @@ describe('AdyenStatusService', () => {
   });
 
   it('throws 400 when environment is not test', async () => {
-    configValues.ADYEN_ENVIRONMENT = 'live';
+    configValues.ADYEN_ENV = 'live';
 
     await expect(service.checkSandboxConnectivity()).rejects.toBeInstanceOf(BadRequestException);
     expect((global as any).fetch).not.toHaveBeenCalled();
   });
 
   it('short-circuits with missing configuration (no network call)', async () => {
-    configValues.ADYEN_ENVIRONMENT = 'test';
+    configValues.ADYEN_ENV = 'test';
     configValues.ADYEN_API_KEY = '';
     configValues.ADYEN_BALANCE_ACCOUNT_ID = '';
 

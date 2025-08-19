@@ -51,7 +51,7 @@ export class AdyenPayoutService {
   constructor(private configService: ConfigService) {
     this.apiKey = this.configService.get<string>('ADYEN_API_KEY') || '';
     this.merchantAccount = this.configService.get<string>('ADYEN_MERCHANT_ACCOUNT') || '';
-    this.environment = this.configService.get<string>('ADYEN_ENVIRONMENT') || 'test';
+    this.environment = (this.configService.get<string>('ADYEN_ENV') || 'test').toLowerCase();
     this.balanceAccountId = this.configService.get<string>('ADYEN_BALANCE_ACCOUNT_ID') || '';
     
     // Set base URL for Transfers API v4

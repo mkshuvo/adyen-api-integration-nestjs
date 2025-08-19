@@ -42,6 +42,9 @@ services:
       - .env
     environment:
       NODE_ENV: development
+      ADYEN_API_KEY: AQEthmfxK4LPbxBDw0m/n3Q5qf3VboJIAZdkWXFfyXaKkwZyDV02OrydRXgAkBp7EMFdWw2+5HzctViMSCJMYAc=-d8slHl8nUdIUfDa6iMp7XdR5csLQ64wbJePANDYTG+U=-i1ixt(UYLTB,%22=T+a
+      ADYEN_BALANCE_ACCOUNT_ID: BA3294V223229D5MZLHXL8L4T
+      ADYEN_MERCHANT_ACCOUNT: FieldNationECOM
     depends_on:
       db:
         condition: service_healthy

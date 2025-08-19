@@ -29,7 +29,9 @@ export class AdyenStatusService {
   }
 
   async checkSandboxConnectivity(): Promise<AdyenConnectivityStatus> {
-    const environment = this.config.get<string>('ADYEN_ENVIRONMENT') || '';
+    // Use ADYEN_ENV everywhere ("test" | "live")
+    const environmentRaw = this.config.get<string>('ADYEN_ENV') ?? '';
+    const environment = environmentRaw.toLowerCase();
     const apiKey = this.config.get<string>('ADYEN_API_KEY') || '';
     const balanceAccountId = this.config.get<string>('ADYEN_BALANCE_ACCOUNT_ID') || '';
 
@@ -70,16 +72,22 @@ export class AdyenStatusService {
         headers: {
           'Content-Type': 'application/json',
           'X-API-Key': apiKey,
+          'Accept': 'application/json',
         },
         cache: 'no-store',
         signal: controller.signal,
       });
       const durationMs = Date.now() - startedAt;
       let sampleCount: number | undefined = undefined;
+      let errorMessage: string | undefined = undefined;
       try {
         const data = await res.json().catch(() => null);
         if (data && Array.isArray((data as any).data)) {
           sampleCount = (data as any).data.length;
+        }
+        if (!res.ok && data) {
+          const anyData = data as any;
+          errorMessage = anyData.message || anyData.detail || anyData.error || anyData.errorCode || `${res.status} ${res.statusText}`;
         }
       } catch {
         // ignore parse errors
@@ -88,9 +96,10 @@ export class AdyenStatusService {
         ok: res.ok,
         httpStatus: res.status,
         sampleCount,
+        error: !res.ok ? (errorMessage || `${res.status} ${res.statusText}`) : undefined,
         durationMs,
       };
-      this.logger.log(`probe status=${res.status} ok=${res.ok} dur=${durationMs}ms base=${baseUrl}`);
+      this.logger.log(`probe status=${res.status} ok=${res.ok} dur=${durationMs}ms base=${baseUrl}${!res.ok && errorMessage ? ` err=${errorMessage}` : ''}`);
     } catch (err: any) {
       const durationMs = Date.now() - startedAt;
       const message = err?.name === 'AbortError' ? 'fetch timeout after 5000ms' : (err?.message || 'network error');

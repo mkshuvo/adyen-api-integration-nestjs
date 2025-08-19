@@ -41,7 +41,7 @@ describe('IntegrationsStatus (e2e)', () => {
   });
 
   it('GET /integrations/adyen/status returns 200 with admin role (sandbox env)', async () => {
-    process.env.ADYEN_ENVIRONMENT = 'test';
+    process.env.ADYEN_ENV = 'test';
     testRole = 'admin';
     await initApp();
 
@@ -59,7 +59,7 @@ describe('IntegrationsStatus (e2e)', () => {
   });
 
   it('GET /integrations/adyen/status returns 403 for insufficient role', async () => {
-    process.env.ADYEN_ENVIRONMENT = 'test';
+    process.env.ADYEN_ENV = 'test';
     testRole = 'customer';
     await initApp();
 
@@ -69,7 +69,7 @@ describe('IntegrationsStatus (e2e)', () => {
   });
 
   it('GET /integrations/adyen/status returns 400 for live environment', async () => {
-    process.env.ADYEN_ENVIRONMENT = 'live';
+    process.env.ADYEN_ENV = 'live';
     testRole = 'admin';
     await initApp();
 

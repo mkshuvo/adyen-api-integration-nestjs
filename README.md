@@ -151,11 +151,11 @@ The system comes with pre-seeded test accounts:
 
 - Endpoint: `GET /api/integrations/adyen/status`
 - RBAC: Requires authenticated role `admin` or `accountant`
-- Environment guard: Only works when `ADYEN_ENVIRONMENT=test` (returns 400 otherwise)
+- Environment guard: Only works when `ADYEN_ENV=test` (returns 400 otherwise)
 - Returns structured JSON with environment, baseUrl, config presence, and connectivity probe result
 
 Required env vars for probe:
-- `ADYEN_ENVIRONMENT` = `test`
+- `ADYEN_ENV` = `test`
 - `ADYEN_API_KEY`
 - `ADYEN_BALANCE_ACCOUNT_ID`
 

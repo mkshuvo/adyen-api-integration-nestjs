@@ -10,6 +10,8 @@ import { HealthModule } from './health/health.module';
 import { User } from './entities/user.entity';
 import { UserBankAccount } from './entities/user_bank_account.entity';
 import { PayAccountingPayment } from './entities/pay_accounting_payment.entity';
+import { PayoutAudit } from './entities/payout_audit.entity';
+import { IntegrationsStatusModule } from './integrations/integrations-status.module';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { PayAccountingPayment } from './entities/pay_accounting_payment.entity';
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'test',
         synchronize: true,
-        entities: [User, UserBankAccount, PayAccountingPayment],
+        entities: [User, UserBankAccount, PayAccountingPayment, PayoutAudit],
         timezone: 'Z',
       }),
     }),
@@ -33,6 +35,7 @@ import { PayAccountingPayment } from './entities/pay_accounting_payment.entity';
     PaymentsModule,
     AdyenModule,
     HealthModule,
+    IntegrationsStatusModule,
   ],
 })
 export class AppModule {}

@@ -113,7 +113,7 @@ export class PaymentsService {
         // Mark payment as paid
         payment.paid = new Date();
         payment.paidMethod = 'adyen_payout';
-        payment.paidTrackingId = payoutResult.pspReference;
+        payment.paidTrackingId = payoutResult.pspReference ?? null;
         payment.paidSentTo = JSON.stringify(bankDetails);
         await this.paymentsRepo.save(payment);
 

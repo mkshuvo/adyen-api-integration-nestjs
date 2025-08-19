@@ -25,20 +25,18 @@ export class BankAccountsService {
     const user = await this.usersRepo.findOne({ where: { id: dto.user_id } });
     if (!user) throw new NotFoundException('User not found');
 
-    // Basic body validation: either IBAN or account_number+routing_code
     const hasIban = !!dto.iban;
     const hasLocal = !!dto.account_number && !!dto.routing_code;
     if (!hasIban && !hasLocal) {
       throw new BadRequestException('Provide either iban or account_number + routing_code');
     }
 
-    // Auto-validate prior to persisting
+    if (hasIban && !isValidIban(dto.iban!)) {
+      throw new BadRequestException('Invalid IBAN format');
+    }
+
     let ok = true;
-    if (hasIban) {
-      if (!isValidIban(dto.iban!)) {
-        ok = false;
-      }
-    } else {
+    if (!hasIban) {
       if (!dto.account_number || dto.account_number.length < 6) ok = false;
       if (!dto.routing_code || dto.routing_code.length < 3) ok = false;
     }

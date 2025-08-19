@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Client, PayoutAPI } from '@adyen/api-library';
 import { PayAccountingPayment } from '../entities/pay_accounting_payment.entity';
 import { User } from '../entities/user.entity';
 import { UserBankAccount } from '../entities/user_bank_account.entity';
@@ -50,66 +49,57 @@ export class AdyenService {
     }
 
     try {
-      // Initialize Adyen client
-      const client = new Client({
-        apiKey,
-        environment: env === 'live' ? 'LIVE' : 'TEST',
-      });
-      const payoutsApi = new PayoutAPI(client);
-
       // Convert amount to minor units (cents)
       const amountMinorUnits = Math.round(amount * 100);
 
       // Prepare bank account details for Adyen
       const bankAccountDetails = this.mapBankAccountToAdyen(bank);
 
-      // Build storeDetailAndSubmitThirdParty request
+      // Build Transfers API request
       const request = {
         amount: {
           currency: bank.currency,
           value: amountMinorUnits,
         },
-        bank: bankAccountDetails,
-        merchantAccount,
+        balanceAccountId: process.env.ADYEN_BALANCE_ACCOUNT_ID,
+        counterparty: {
+          bankAccount: bankAccountDetails,
+        },
+        description: `Payout for payment ${payment.paymentId}`,
         reference: `payout-${payment.paymentId}`,
-        shopperEmail: user.email,
-        shopperReference: `user-${user.id}`,
-        shopperName: {
-          firstName: bank.accountHolderName.split(' ')[0] || bank.accountHolderName,
-          lastName: bank.accountHolderName.split(' ').slice(1).join(' ') || '',
-        },
-        entityType: 'NaturalPerson',
-        nationality: bank.country,
-        recurring: {
-          contract: 'PAYOUT',
-        },
-      } as any;
+        priority: 'regular',
+      };
 
-      this.logger.log(`Submitting payout to Adyen for payment ${payment.paymentId}`);
+      this.logger.log(`Submitting transfer to Adyen for payment ${payment.paymentId}`);
 
-      // Call Adyen API with idempotency header
-      const response = await payoutsApi.InitializationApi.storeDetailAndSubmitThirdParty(request, {
-        idempotencyKey,
+      // Use Transfers API v3
+      const baseUrl = env === 'live' 
+        ? 'https://balanceplatform-api-live.adyen.com/btl/v3'
+        : 'https://balanceplatform-api-test.adyen.com/btl/v3';
+
+      const response = await fetch(`${baseUrl}/transfers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify(request),
       });
 
-      this.logger.log(`Adyen payout submitted: ${response?.pspReference ?? 'no-psp-reference'}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.error(`Adyen transfer failed: ${response.status} - ${errorText}`);
+        throw new Error(`Adyen transfer failed: ${response.status} - ${errorText}`);
+      }
 
-      // Immediately confirm the payout for the review step
-      const confirmKey = `${idempotencyKey}-confirm`;
-      const confirmResp = await payoutsApi.ReviewingApi.confirmThirdParty(
-        {
-          merchantAccount,
-          originalReference: (response as any)?.pspReference,
-        } as any,
-        { idempotencyKey: confirmKey },
-      );
-
-      this.logger.log(`Adyen payout confirmed: ${confirmResp?.pspReference ?? 'no-psp-reference'}`);
+      const result = await response.json();
+      this.logger.log(`Adyen transfer submitted: ${result?.id ?? 'no-transfer-id'}`);
 
       return {
         status: 'submitted',
-        pspReference: (confirmResp as any)?.pspReference ?? (response as any)?.pspReference,
-        message: `Payout submitted and confirmed in ${env} environment`,
+        pspReference: result?.id,
+        message: `Transfer submitted in ${env} environment`,
       };
     } catch (error) {
       this.logger.error(`Adyen payout failed for payment ${payment.paymentId}:`, error);
@@ -125,20 +115,20 @@ export class AdyenService {
   }
 
   /**
-   * Maps UserBankAccount entity to Adyen bank account format
+   * Maps UserBankAccount entity to Adyen Transfers API format
    */
   private mapBankAccountToAdyen(bank: UserBankAccount) {
     const bankAccount: any = {
       countryCode: bank.country,
-      ownerName: bank.accountHolderName,
+      accountHolderName: bank.accountHolderName,
     };
 
     // Use IBAN for SEPA countries, account number + routing for US
     if (bank.iban) {
       bankAccount.iban = bank.iban;
     } else if (bank.accountNumber && bank.routingCode) {
-      bankAccount.bankAccountNumber = bank.accountNumber;
-      bankAccount.bankLocationId = bank.routingCode;
+      bankAccount.accountNumber = bank.accountNumber;
+      bankAccount.routingNumber = bank.routingCode;
     } else {
       throw new Error('Bank account must have either IBAN or account number + routing code');
     }

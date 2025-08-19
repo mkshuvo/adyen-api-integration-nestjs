@@ -147,6 +147,27 @@ The system comes with pre-seeded test accounts:
 
 ## 🧪 Testing
 
+### Sandbox Connectivity Status
+
+- Endpoint: `GET /api/integrations/adyen/status`
+- RBAC: Requires authenticated role `admin` or `accountant`
+- Environment guard: Only works when `ADYEN_ENVIRONMENT=test` (returns 400 otherwise)
+- Returns structured JSON with environment, baseUrl, config presence, and connectivity probe result
+
+Required env vars for probe:
+- `ADYEN_ENVIRONMENT` = `test`
+- `ADYEN_API_KEY`
+- `ADYEN_BALANCE_ACCOUNT_ID`
+
+Curl example (with JWT):
+```bash
+curl -H "Authorization: Bearer <JWT>" \
+  http://localhost:8054/api/integrations/adyen/status
+```
+
+UI page:
+- Visit `http://localhost:9807/status` (auto-refresh, manual refresh, error handling)
+
 ### API Testing
 
 Use the seeded accounts to test the complete flow:

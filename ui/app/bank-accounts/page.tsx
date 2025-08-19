@@ -168,8 +168,17 @@ export default function BankAccountsPage() {
   const onSubmit = async (data: BankAccountForm) => {
     try {
       setSubmitting(true);
-      // Call API to create/update bank account
-      await apiPost('/bank-accounts', data);
+      // Transform to snake_case for backend API
+      const payload = {
+        user_id: data.userId,
+        country: data.country,
+        currency: data.currency,
+        account_holder_name: data.accountHolderName,
+        iban: data.iban,
+        account_number: data.accountNumber,
+        routing_code: data.routingCode,
+      };
+      await apiPost('/bank-accounts', payload);
       await loadData();
       handleCloseDialog();
     } catch (err) {
@@ -182,13 +191,13 @@ export default function BankAccountsPage() {
   const handleValidate = async (account: BankAccount) => {
     try {
       await apiPost('/bank-accounts/validate', {
-        userId: account.userId,
+        user_id: account.userId,
         country: account.country,
         currency: account.currency,
-        accountHolderName: account.accountHolderName,
+        account_holder_name: account.accountHolderName,
         iban: account.iban,
-        accountNumber: account.accountNumber,
-        routingCode: account.routingCode,
+        account_number: account.accountNumber,
+        routing_code: account.routingCode,
       });
       await loadData();
     } catch (err) {
@@ -235,15 +244,13 @@ export default function BankAccountsPage() {
               Manage and validate user bank accounts for payouts
             </Typography>
           </div>
-          <RoleGuard allowedRoles={['admin', 'accountant']}>
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => handleOpenDialog()}
-            >
-              Add Bank Account
-            </Button>
-          </RoleGuard>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Bank Account
+          </Button>
         </Box>
 
         {error && (

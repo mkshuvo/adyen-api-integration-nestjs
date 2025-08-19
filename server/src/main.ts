@@ -13,7 +13,17 @@ async function bootstrap() {
     credentials: true,
   });
   
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ 
+    whitelist: true, 
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+    validationError: {
+      target: false,
+      value: false,
+    },
+  }));
   app.setGlobalPrefix('api');
   const port = Number(process.env.API_PORT ?? 8054);
   await app.listen(port);
